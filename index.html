@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html
+<head>
+    <!a-- Le styles -->
+
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+        pading-left: 10px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      @media (max-width: 980px) {
+        /* Enable use of floated navbar text */
+        .navbar-text.pull-right {
+          float: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+      }
+
+      #song{
+        font-family: "Courier New", Courier, monospace;
+        height:300px;
+        padding:5px;
+        width:100%;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+      #sample{
+        margin-top:-4px;
+      }
+      .btn-top{
+        margin-top:-15px;
+      }
+      .hero-unit{
+        padding:20px;
+      }
+
+      footer span{
+        margin-right: 10px;
+      }
+    </style>
+
+  </head>
+
+  <body>
+<div class="clearfix">
+    <div class="pull-left">
+        <p><span>Masukan Lirik dan Akord : &nbsp;</span></p>
+        <p><button id="sample" class="btn btn-mini"> Paste Contoh</button></p>
+    </div>
+</div>
+
+<textarea cols="50" rows="35" id="song" placeholder="Ketik Disini"></textarea>
+
+<div class="clearfix">
+    <div class="pull-left">
+
+    </div>
+    <div class="pull-right">
+        <input id="enharmonic" type="checkbox"/> <sub>Gunakan Enharmonic</sub>
+        &nbsp;
+        <button class="btn btn-primary stepUp">Naik</button>
+        <button class="btn btn-primary stepDown">Turun</button>
+    </div>
+</div>
+<div style="margin-top: 30px; border-top: solid 1px #ddd;padding-top: 15px;font: normal 13px sans-serif">
+    <p>Chord Transposer</p>
+
+    <p>&copy;Copyright 2020, <a href="https://www.dunialirik.site/">dunialirik.site</a></p>
+</div>
+
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="bootstrap.min.js"></script>
+    <script type="text/javascript" src="jquery.elastic.js"></script>
+    <script type="text/javascript" src="tt.js"></script>
+
+     <script type="text/javascript">
+
+        $(function(){
+
+            var $song = $("#song"),
+                $enharmonic = $("#enharmonic"),
+                originalSong,
+                transposedSong,
+                steps = 0,
+                transposingFlag = false;
+
+            //make the textarea autogrow
+            $song.elastic();
+            
+            //load the sample song
+            $("#sample").on('click', function(){
+              $song.val(TabTuner.getSampleSong());
+              $song.trigger('change');
+
+				//analytics event
+			  ga('send', {
+				  hitType: 'event',
+				  eventCategory: 'Tabs',
+				  eventAction: 'loadsample',
+				  eventLabel: 'Load Sample'
+				});
+			  
+            });
+
+            //make song higher
+            $(".stepUp").on('click', function(){
+                transpose(1);
+				
+				//analytics event
+			  ga('send', {
+				  hitType: 'event',
+				  eventCategory: 'Tabs',
+				  eventAction: 'transposeup',
+				  eventLabel: 'Transpose Up'
+				});
+            });
+
+            //make song lower
+            $(".stepDown").on('click', function(){
+                transpose(-1);
+				
+				//analytics event
+			  ga('send', {
+				  hitType: 'event',
+				  eventCategory: 'Tabs',
+				  eventAction: 'transposedown',
+				  eventLabel: 'Transpose Down'
+				});
+            });
+
+            //transpose the song
+            function transpose(step){
+                //calculate the correct steps from the original
+                steps = getSteps(step);
+
+                var useEnharmonics = $enharmonic.is(":checked"), 
+                    transposedSong = function(){
+
+                    if(!originalSong){
+                      originalSong = $song.val();
+                    }
+
+                    //do the transposing
+                    return TabTuner.transposeSong(originalSong, steps, useEnharmonics);
+                }();
+                
+                
+                transposingFlag = true;
+                $song.val(transposedSong);
+                transposingFlag = false;
+            }
+
+            //update the reference song
+            $('#song').on('onchange blur change', function(){
+              //if it's the user changing the content
+              if(!transposingFlag){
+                originalSong = $('#song').val();
+                steps = 0;
+              }
+            });
+
+            //get the steps to transpose the original song
+            function getSteps(step){
+
+              var s = function(){
+                steps += step;
+
+                if(steps > 11){
+                  steps -= 12;
+                }
+                else if(steps < 0){
+                  steps += 12;
+                }
+
+                return steps;
+              }();
+
+              return s;
+            }
+			
+			document.getElementById("song").addEventListener('paste', function(e){
+				console.log("song pasted")
+			});
+
+        });
+
+    </script>
+	</body>
+</html>
